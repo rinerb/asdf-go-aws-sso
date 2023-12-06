@@ -7,6 +7,23 @@ GH_REPO="https://github.com/theurichde/go-aws-sso"
 TOOL_NAME="go-aws-sso"
 TOOL_TEST="go-aws-sso --help"
 
+get_arch() {
+	uname | tr '[:upper:]' '[:lower:]'
+}
+
+get_cpu() {
+	local machine_hardware_name
+	machine_hardware_name=${ASDF_TFSEC_OVERWRITE_ARCH:-"$(uname -m)"}
+
+	case "$machine_hardware_name" in
+	'x86_64') local cpu_type="amd64" ;;
+	'aarch64') local cpu_type="arm64" ;;
+	*) local cpu_type="$machine_hardware_name" ;;
+	esac
+
+	echo "$cpu_type"
+}
+
 fail() {
 	echo -e "asdf-$TOOL_NAME: $*"
 	exit 1
@@ -41,8 +58,10 @@ download_release() {
 	version="$1"
 	filename="$2"
 
-	# TODO: Adapt the release URL convention for go-aws-sso
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	platform="$(get_arch)"
+	cpu=$(get_cpu)
+
+	url="$GH_REPO/releases/download/v${version}/${TOOL_NAME}_${version}_${platform}_${cpu}.tar.gz"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
